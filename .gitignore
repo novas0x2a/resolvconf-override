@@ -17,4 +17,5 @@ libresolvconf_override.la
 libresolvconf_override_la-resolvconf-override.lo
 libtool
 ltmain.sh
+m4
 missing

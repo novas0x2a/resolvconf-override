@@ -1,4 +1,5 @@
 AM_LDFLAGS=-avoid-version -module -export-dynamic
+ACLOCAL_AMFLAGS=-I m4
 
 lib_LTLIBRARIES = libresolvconf_override.la
 
