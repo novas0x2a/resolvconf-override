@@ -59,33 +59,60 @@ override_ns (void)
     _res.nscount = valid_ns;
 }
 
+#define OVERRIDE "OVERRIDE_HOSTNAME_"
+#define OVERRIDE_LEN 18
+#define MAX_HOSTNAME_LEN 255
+#define MAX_ADDR_LEN 15
+
+static struct hostent *host = NULL;
+//static char hostbuf[8*1024];
+//static char *host_aliases[1] = {NULL};
+//static char *h_addr_ptrs[2];
+//static char addr[MAX_ADDR_LEN];
+
+struct hostent* (*oldgethostbyname)(const char *) = NULL;
+
 struct hostent *gethostbyname(const char *name)
 {
-  if (res_init () < 0)
-    return NULL;
+  struct in_addr **addr_list;
+  size_t i;
+  char envvar[OVERRIDE_LEN + MAX_HOSTNAME_LEN + 1] = OVERRIDE;
+
+  oldgethostbyname = dlsym(RTLD_NEXT, "gethostbyname");
+
+  strncat(envvar, name, MAX_HOSTNAME_LEN);
+
+  const char *addr = getenv(envvar);
+  if (addr != NULL) {
+    host = oldgethostbyname("pistoncloud.com");
+    printf("host is %p\n", host);
+    assert(host != NULL);
+    for( i = 0; addr_list[i] != NULL; i++) {
+      inet_aton(addr, addr_list[i]);
+    }
+    //strncpy(hostbuf, name, MAXDNAME);
+    //hostbuf[MAXDNAME] = '\0';
+
+    //host.h_name     = hostbuf;
+    //host.h_aliases  = host_aliases;
+    //host_aliases[0] = NULL;
+    //host.h_addrtype = AF_INET;
+    //host.h_length   = INADDRSZ;
+    //strncpy(h_addr_ptrs[0], addr, MAX_ADDR_LEN);
+    //h_addr_ptrs[1]  = NULL;
+    //host.h_addr_list = h_addr_ptrs;
+    //return &host;
+  }
+
   struct hostent * (*f)() = dlsym (RTLD_NEXT, "gethostbyname");
   struct hostent *ret =  f(name);
 
   return ret;
 }
 
-int getaddrinfo(const char *node, const char *service,
-    const struct addrinfo *hints,
-    struct addrinfo **res)
-{
-  if (res_init () < 0)
-    return EAI_SYSTEM;
-  int (*f)() = dlsym (RTLD_NEXT, "getaddrinfo");
-  return f(node, service, hints, res);
-}
-
-int __res_init(void)
-{
-  int (*f)() = dlsym (RTLD_NEXT, "__res_init");
-  assert (f);
-  int ret = f();
-
-  override_ns ();
-
-  return ret;
-}
+//int getaddrinfo(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res)
+//{
+//  strict addrinfo
+//  int (*f)() = dlsym (RTLD_NEXT, "getaddrinfo");
+//  return f(node, service, hints, res);
+//}

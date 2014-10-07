@@ -16,5 +16,8 @@ AC_PROG_INSTALL
 AC_PROG_SED
 AM_PROG_CC_C_O
 
+AC_ARG_ENABLE([debug], [AS_HELP_STRING([--enable-debug], [debug yo])], \
+    [CFLAGS="-g -DDEBUG"], [])
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
